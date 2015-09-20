@@ -88,9 +88,61 @@ bool one_game(const char *word) {
  * return the linked list of words.
  */
 wordnode *load_words(const char *filename, int *num_words) {
+        num_words = 0;
         FILE * fp = fopen(filename, "r");
-        
+        wordnode * list;
+        wordnode * head = NULL;
+        char str[256];
+        while (fgets(str, 256, fp) != NULL) {
+            str[strlen(str) - 1] = '\0';
+            int alpha = 1;
+            for (int i = 0; i < strlen(str); i++){ 
+                if (!isalpha(str[i])) {
+                    alpha = 0;
+                }
+                str[i] = toupper(str[i]);
+            }
+            if (alpha == 1) {
+                if (head == NULL){
+                    head = malloc(sizeof(char) *257);
+                    strcpy(head->word,str);
+                    list = head;
+                    }
+                else{
+                    strcpy(list->word,str);
+                    list->next = malloc(sizeof(char)*257);
+                    list=list->next;
+                    }
+                //printf("%s\n", str);
+                num_words++;
+            }
+        }
+        printf("%d\n", num_words);
+        printf("%s\n", head->word);
+        printf("%s\n", list->word);
+        list = head;
+        while (list != NULL) {
+            printf("%s\n", list->word);
+        }
+        return head;
     }
+
+wordnode * list_append(char name, wordnode *list) {
+    wordnode *newnode = malloc(sizeof(char)*257);
+    strcpy(newnode->word, name);
+    newnode->next = NULL;
+    wordnode *head = list;
+    if (head == NULL) {
+        head = newnode;
+        return head;
+    }
+    while (list->next != NULL) {
+        list = list->next;
+    }
+    list->next = newnode;
+    return head;
+    
+}
 
 /*
  * Completely free and deallocate the linked list of words.
@@ -101,14 +153,13 @@ void free_words(wordnode *wordlist) {
         wordlist = wordlist->next;
         free(tmp);
     }
-
 }
 
 /*
  * Choose one random word from the linked list and return it.
  */
 const char *choose_random_word(wordnode *wordlist, int num_words) {
-
+    
 }
 
 
