@@ -68,14 +68,78 @@ void print_gallows(int num_missed) {
     printf ("     =================\n\n");
 }
 
+int checkguess(char guess[], char guessed[], char word[]){
+    if(strlen(guess)>1){
+        printf("Just one letter, silly anxious player\n");
+        return 0;
+    } else if(!isalpha(guess[0])){
+        printf("How about a letter. Seriously.\n");
+        return 0;
+    } else if((strchr(guessed, guess[0])) != NULL){
+        printf("You already guessed %c\n", guess[0]);
+        return 0;
+    } else if ((strchr(word, guess[0])) != NULL){
+        printf("Bad guess. You stink\n");
+        return 1;
+    } else {
+        return 2;
+    }
+    
+}
+
 /*
  * Play one game of Hangperson.  The secret word is passed as a
  * parameter.  The function should return true if the player won,
  * and false otherwise.
  */
 bool one_game(const char *word) {
+    int num_missed = 0;
+    char secret[strlen(word) * 2];
+    for (int i = 0; i < strlen(secret); i += 2){
+        secret[i] = 95;
+        secret[i + 1] = 32;
+    }
+    char guessed[26] = "";
+    while (num_missed < 7) {
+        printf("Missed: %d\n", num_missed);
+        print_gallows(num_missed);
+        printf("%s\n", secret);
+        if (strlen(guessed) == 0) {
+            printf("Already guessed: (none)\n");
+        } else {
+            printf("Already guessed: %s\n", guessed);
+        }
+        printf("Enter your guess: ");
+        char guess[128];
+        fgets(guess, 128, stdin);
+        guess[strlen(guess) - 1] = '\0';
+        printf("%d\n", checkguess(guess, guessed, word));
+    }
+}
 
-    
+bool checkword(char str[]) {
+    str[strlen(str) - 1] = '\0';
+    for (int i = 0; i < strlen(str); i++) {
+       if (!isalpha(str[i])) return false;
+       str[i] = toupper(str[i]);
+    }
+    return true;
+}
+
+wordnode * append_to_list(wordnode * list, char str[256]) {
+    wordnode * new = malloc(sizeof(char)*257);
+    strcpy(new->word, str);
+    new->next = NULL;
+    list->next = new;
+    return list->next;
+}
+
+void print_list(wordnode * head) {
+    wordnode * list = head;
+    while (list != NULL) {
+        printf("%s\n", list->word);
+        list = list-> next;
+    }
 }
 
 /* 
@@ -88,61 +152,22 @@ bool one_game(const char *word) {
  * return the linked list of words.
  */
 wordnode *load_words(const char *filename, int *num_words) {
-        num_words = 0;
         FILE * fp = fopen(filename, "r");
-        wordnode * list;
-        wordnode * head = NULL;
         char str[256];
-        while (fgets(str, 256, fp) != NULL) {
-            str[strlen(str) - 1] = '\0';
-            int alpha = 1;
-            for (int i = 0; i < strlen(str); i++){ 
-                if (!isalpha(str[i])) {
-                    alpha = 0;
-                }
-                str[i] = toupper(str[i]);
+        wordnode * head = malloc(sizeof(char)*257);
+        fgets(str,256, fp);
+        checkword(str);
+        strcpy(head->word, str);
+        head->next = NULL;
+        wordnode * list = head;
+        while (fgets(str, 256, fp) != NULL){
+            if (checkword(str)) {
+                *num_words += 1;
+                list = append_to_list(list, str);    
             }
-            if (alpha == 1) {
-                if (head == NULL){
-                    head = malloc(sizeof(char) *257);
-                    strcpy(head->word,str);
-                    list = head;
-                    }
-                else{
-                    strcpy(list->word,str);
-                    list->next = malloc(sizeof(char)*257);
-                    list=list->next;
-                    }
-                //printf("%s\n", str);
-                num_words++;
-            }
-        }
-        printf("%d\n", num_words);
-        printf("%s\n", head->word);
-        printf("%s\n", list->word);
-        list = head;
-        while (list != NULL) {
-            printf("%s\n", list->word);
         }
         return head;
     }
-
-wordnode * list_append(char name, wordnode *list) {
-    wordnode *newnode = malloc(sizeof(char)*257);
-    strcpy(newnode->word, name);
-    newnode->next = NULL;
-    wordnode *head = list;
-    if (head == NULL) {
-        head = newnode;
-        return head;
-    }
-    while (list->next != NULL) {
-        list = list->next;
-    }
-    list->next = newnode;
-    return head;
-    
-}
 
 /*
  * Completely free and deallocate the linked list of words.
@@ -159,7 +184,14 @@ void free_words(wordnode *wordlist) {
  * Choose one random word from the linked list and return it.
  */
 const char *choose_random_word(wordnode *wordlist, int num_words) {
-    
+    int rand = random();
+    rand = rand % num_words;
+    for (int i = 0; i < rand; i++){
+        wordlist = wordlist->next;
+    }
+    const char * word[256];
+    strcpy(word, wordlist->word);
+    return word;
 }
 
 
