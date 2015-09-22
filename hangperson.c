@@ -67,8 +67,59 @@ void print_gallows(int num_missed) {
     printf ("       |||\n");
     printf ("     =================\n\n");
 }
-
-int checkguess(char guess[], char guessed[], char word[]){
+/*
+ * This function prints out at the initial start of the game and after
+ * each guess made by the user so they can see the gallows,
+ * the letters they have already guessed, how many misses they
+ * have, and how close they are to guessing the correct word.
+ */
+void print_state(int num_missed, char secret[], char guessed[]){
+    printf("Missed: %d\n", num_missed);
+    print_gallows(num_missed);
+    for (int i = 0; i < strlen(secret); i++){
+        printf("%c ", toupper(secret[i]));
+    }
+    printf("\n");
+    if (strlen(guessed) == 0) {
+        printf("Already guessed: (none)\n");
+    } else {
+        printf("Already guessed: %s\n", guessed);
+    }
+    printf("What is your guess? ");
+    return;
+}
+/*
+ * This function checks to see if the user had guessed all the letters 
+ * in the secret word. It will stop the game if the user has won.
+ */
+bool game_outcome(char secret[], char *word){
+    int endif = 0;
+    for (int j = 0; j < strlen(secret); j++){
+        if (secret[j] == '_'){
+            endif++;
+        }   
+    }
+    if (endif == 0) {
+        printf("Congratulations, you've won! The word was %s.\n", word);
+        return true;
+    }
+    return false;
+}
+/*
+ * This function updates the secret array if the user has guessed
+ * a correct letter.
+ */
+void good_turn(char guess[], char *word, char secret[]){
+    for (int i = 0; i < strlen(word); i++){
+        if (toupper(guess[0]) == word[i]) {
+            secret[i] = toupper(guess[0]);
+        }
+    }
+}
+/* This function takes in the user input and checks to make
+ * sure the guess is valid. 
+ */
+int check_guess(char guess[], char guessed[], char *word){
     if(strlen(guess)>1){
         printf("Just one letter, silly anxious player\n");
         return 0;
@@ -82,6 +133,7 @@ int checkguess(char guess[], char guessed[], char word[]){
         printf("Bad guess. You stink\n");
         return 1;
     } else {
+        printf("Good guess!\n");
         return 2;
     }
     
@@ -92,6 +144,7 @@ int checkguess(char guess[], char guessed[], char word[]){
  * parameter.  The function should return true if the player won,
  * and false otherwise.
  */
+
 bool one_game(const char *word) {
     int secret_len = strlen(word);
     int num_missed = 0;
@@ -102,41 +155,20 @@ bool one_game(const char *word) {
     secret[secret_len] = '\0';
     char guessed[27] = "";
     while (num_missed < 7) {
-        printf("%s\nMissed: %d\n", word, num_missed);
-        print_gallows(num_missed);
-        for (int i = 0; i < strlen(secret); i++){
-            printf("%c ", secret[i]);
-        }
-        printf("\n");
-        if (strlen(guessed) == 0) {
-            printf("Already guessed: (none)\n");
-        } else {
-            printf("Already guessed: %s\n", guessed);
-        }
-        printf("Enter your guess: ");
+        print_state(num_missed, secret, guessed);
         char guess[128];
         fgets(guess, 128, stdin);
         guess[strlen(guess) - 1] = '\0';
-        int guessres =  checkguess(guess, guessed, word);
-        if (guessres == 2) {
-            strcat(guessed, guess);
-            for (int i = 0; i < strlen(word); i++){
-                if (toupper(guess[0]) == word[i]) {
-                    secret[i] = toupper(guess[0]);
-                }
-            }
-        } else if (guessres == 1) {
+        int resultguess = check_guess(guess, guessed, word);
+        if (resultguess == 2) {
+            strcat(guessed,guess);
+            good_turn(guess,word,secret);
+        }
+        else if (resultguess == 1) {
             num_missed++;
             strcat(guessed, guess);
         }
-        int endif = 0;
-        for (int j = 0; j < strlen(secret); j++){
-            if (secret[j] == '_'){
-                endif++;
-            }   
-        }
-        if (endif == 0) {
-            printf("Congratulations, you've won! The word was %s.\n", word);
+        if (game_outcome(secret,word)){
             return true;
         }
     }
@@ -144,6 +176,7 @@ bool one_game(const char *word) {
     printf("Sorry, you've lost...The word was %s.\n", word);
     return false;
 }
+
 
 bool checkword(char str[]) {
     str[strlen(str) - 1] = '\0';
@@ -237,7 +270,7 @@ int main() {
         printf("Didn't load any words?!\n");
         return 0;
     }
-    char *word = choose_random_word(words, num_words);
+    char * word = choose_random_word(words, num_words);
     one_game(word);
     free_words(words);
     return 0;
