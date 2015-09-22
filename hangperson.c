@@ -75,10 +75,10 @@ int checkguess(char guess[], char guessed[], char word[]){
     } else if(!isalpha(guess[0])){
         printf("How about a letter. Seriously.\n");
         return 0;
-    } else if((strchr(guessed, guess[0])) != NULL){
+    } else if((strcasestr(guessed, guess)) != NULL){
         printf("You already guessed %c\n", guess[0]);
         return 0;
-    } else if ((strchr(word, guess[0])) != NULL){
+    } else if ((strcasestr(word, guess)) == NULL){
         printf("Bad guess. You stink\n");
         return 1;
     } else {
@@ -93,17 +93,21 @@ int checkguess(char guess[], char guessed[], char word[]){
  * and false otherwise.
  */
 bool one_game(const char *word) {
+    int secret_len = strlen(word);
     int num_missed = 0;
-    char secret[strlen(word) * 2];
-    for (int i = 0; i < strlen(secret); i += 2){
+    char secret[secret_len];
+    for (int i = 0; i < secret_len; i++){
         secret[i] = 95;
-        secret[i + 1] = 32;
     }
-    char guessed[26] = "";
+    secret[secret_len] = '\0';
+    char guessed[27] = "";
     while (num_missed < 7) {
-        printf("Missed: %d\n", num_missed);
+        printf("%s\nMissed: %d\n", word, num_missed);
         print_gallows(num_missed);
-        printf("%s\n", secret);
+        for (int i = 0; i < strlen(secret); i++){
+            printf("%c ", secret[i]);
+        }
+        printf("\n");
         if (strlen(guessed) == 0) {
             printf("Already guessed: (none)\n");
         } else {
@@ -113,8 +117,32 @@ bool one_game(const char *word) {
         char guess[128];
         fgets(guess, 128, stdin);
         guess[strlen(guess) - 1] = '\0';
-        printf("%d\n", checkguess(guess, guessed, word));
+        int guessres =  checkguess(guess, guessed, word);
+        if (guessres == 2) {
+            strcat(guessed, guess);
+            for (int i = 0; i < strlen(word); i++){
+                if (toupper(guess[0]) == word[i]) {
+                    secret[i] = toupper(guess[0]);
+                }
+            }
+        } else if (guessres == 1) {
+            num_missed++;
+            strcat(guessed, guess);
+        }
+        int endif = 0;
+        for (int j = 0; j < strlen(secret); j++){
+            if (secret[j] == '_'){
+                endif++;
+            }   
+        }
+        if (endif == 0) {
+            printf("Congratulations, you've won! The word was %s.\n", word);
+            return true;
+        }
     }
+    print_gallows(7);
+    printf("Sorry, you've lost...The word was %s.\n", word);
+    return false;
 }
 
 bool checkword(char str[]) {
