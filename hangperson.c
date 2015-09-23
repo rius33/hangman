@@ -7,6 +7,9 @@
 #include <time.h>
 #include <assert.h>
 
+/* Students: Natalie Abrams and Obi O'Brien
+ * Date: 9/22/2015
+ */
 
 /*
  * linked list data structure definitions
@@ -77,7 +80,7 @@ void print_state(int num_missed, char secret[], char guessed[]){
     printf("Missed: %d\n", num_missed);
     print_gallows(num_missed);
     for (int i = 0; i < strlen(secret); i++){
-        printf("%c ", toupper(secret[i]));
+        printf("%c ", secret[i]);
     }
     printf("\n");
     if (strlen(guessed) == 0) {
@@ -161,11 +164,13 @@ bool one_game(const char *word) {
         guess[strlen(guess) - 1] = '\0';
         int resultguess = check_guess(guess, guessed, word);
         if (resultguess == 2) {
+            guess[0] = toupper(guess[0]);
             strcat(guessed,guess);
             good_turn(guess,word,secret);
         }
         else if (resultguess == 1) {
             num_missed++;
+            guess[0] = toupper(guess[0]);
             strcat(guessed, guess);
         }
         if (game_outcome(secret,word)){
